@@ -14,17 +14,23 @@ api_key = os.getenv("GEMINI_API_KEY")
 genai.configure(api_key=api_key)
 
 # Use a valid model (replace with an actual valid model name if needed)
-model = genai.GenerativeModel('models/gemini-1.5-pro')
+model = genai.GenerativeModel('models/gemini-2.0-flash')
 
 
 app = Flask(__name__)
 
 
-BASE_PROMPT = """Create a response document with content that matches the following URL path: 
-    `{{URL_PATH}}`
-The first line is the Content-Type of the response.
-The following lines is the returned data.
-In case of a html response, add relative href links with to related topics.
+BASE_PROMPT = """Generate a response for the URL path: `{{URL_PATH}}`
+
+The first line must be the Content-Type (use 'text/html' for HTML responses).
+All subsequent lines should contain ONLY the renderable content with NO explanatory text, examples, or instructions.
+
+For HTML responses:
+- Include proper HTML structure (doctype, html, head, body tags)
+- Add a relevant title and content based on the URL path
+- Create relative href links to related topics where appropriate
+- Ensure the HTML is valid and immediately renderable in a browser
+
 {{OPTIONAL_DATA}}
 Content-Type:
 """
