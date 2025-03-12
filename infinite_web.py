@@ -165,11 +165,11 @@ SEARCH_PAGE_HTML = """
 </head>
 <body>
     <div class="links-container">
-        <a href="/index">Saved Searches</a>
+        <a href="index">Saved Searches</a>
     </div>
     <div class="logo"><span class="infinite">INFINITE AI WEB</span></div>
     <div class="search-container">
-        <form action="/search" method="GET">
+        <form action="search" method="GET">
             <input type="text" class="search-bar" name="query" placeholder="Search the web..." autofocus>
             <div class="buttons">
                 <button type="submit" class="search-button">Search</button>
@@ -260,7 +260,8 @@ def generate_index_html():
         # Format path for display (replace hyphens with spaces, capitalize words)
         display_path = path.replace("-", " ").replace("/", " › ")
         display_path = " ".join([word.capitalize() for word in display_path.split()])
-        links_html += f'    <li><a href="/{path}">{display_path}</a></li>\n'
+        # Remove the leading slash from links to make them relative
+        links_html += f'    <li><a href="{path}">{display_path}</a></li>\n'
     
     # If no links, add a message
     if not links_html:
@@ -336,7 +337,7 @@ def generate_index_html():
     <ul>
 {links_html}
     </ul>
-    <a href="/" class="home-link">Back to Search</a>
+    <a href="." class="home-link">Back to Search</a>
     <div class="footer">
         made with 🍋 by Lime1
     </div>
@@ -379,7 +380,8 @@ def search():
     
     # Convert the query to a URL-friendly format
     search_path = query.replace(' ', '-').lower()
-    return redirect(f"/{search_path}")
+    # Use relative path (no leading slash)
+    return redirect(f"{search_path}")
 
 @app.route("/index", methods=['GET'])
 def index():
@@ -466,7 +468,7 @@ def catch_all(path=""):
             <p>There was an error generating content for: <strong>{path}</strong></p>
             <p>Error details: {str(e)}</p>
             <div class="home-link">
-                <a href="/">Back to Search</a>
+                <a href=".">Back to Search</a>
             </div>
         </body>
         </html>
