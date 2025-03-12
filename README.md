@@ -24,7 +24,7 @@ A dynamic web content generator that creates pages on-the-fly using AI. Simply s
 
 1. Clone this repository:
    ```
-   git clone https://github.com/yourusername/infinite-ai-web.git
+   https://github.com/TheLime1/infinite-ai-web
    cd infinite-ai-web
    ```
 
