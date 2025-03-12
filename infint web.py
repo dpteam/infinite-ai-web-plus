@@ -362,6 +362,13 @@ def generate_index_html():
 
 @app.route("/", methods=['GET'])
 def home():
+    # Save the home page HTML if it doesn't exist yet
+    home_path = os.path.join(ROOT_DIR, "home.html")
+    if not os.path.exists(home_path):
+        with open(home_path, "w", encoding="utf-8") as f:
+            f.write(SEARCH_PAGE_HTML)
+        print("Saved home page HTML to home.html")
+    
     return SEARCH_PAGE_HTML, 200, {'Content-Type': 'text/html'}
 
 @app.route("/search", methods=['GET'])
@@ -406,6 +413,9 @@ def catch_all(path=""):
             content = f.read()
         return content, 200, {'Content-Type': 'text/html'}
     
+    # Generate content for any path that hasn't been found
+    print(f"No existing file found for {path}, generating content...")
+    
     if request.form:
         prompt_content = BASE_PROMPT.replace("{{OPTIONAL_DATA}}", f"form data: {json.dumps(request.form)}")
     else:
@@ -430,15 +440,38 @@ def catch_all(path=""):
         
         print(f"Content type: {content_type}")
         
-        # If the response is HTML, save it to the file system
+        # Save all HTML responses to the file system, regardless of how they're accessed
         if content_type == "text/html":
-            print("Saving HTML response...")
+            print(f"Saving HTML response for path: {path}")
             save_html_response(path, response_data)
         
         return response_data, 200, {'Content-Type': content_type}
     except Exception as e:
         print(f"Error generating content: {str(e)}")
-        return f"Error generating content: {str(e)}", 500
+        error_page = f"""
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Error - INFINITE AI WEB</title>
+            <style>
+                body {{ font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }}
+                h1 {{ color: #ea4335; }}
+                .home-link {{ margin-top: 30px; }}
+            </style>
+        </head>
+        <body>
+            <h1>Error Generating Content</h1>
+            <p>There was an error generating content for: <strong>{path}</strong></p>
+            <p>Error details: {str(e)}</p>
+            <div class="home-link">
+                <a href="/">Back to Search</a>
+            </div>
+        </body>
+        </html>
+        """
+        return error_page, 500, {'Content-Type': 'text/html'}
 
 if __name__ == '__main__':
     # Create index.html if it doesn't exist yet
