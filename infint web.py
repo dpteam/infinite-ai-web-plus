@@ -18,8 +18,10 @@ genai.configure(api_key=api_key)
 # Use a valid model (replace with an actual valid model name if needed)
 model = genai.GenerativeModel('models/gemini-2.0-flash')
 
-# Define the web directory path - use absolute path to avoid issues
-WEB_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "web")
+# Define the root directory path - use absolute path to avoid issues
+ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
+WEB_DIR = os.path.join(ROOT_DIR, "web")
+print(f"Root directory path: {ROOT_DIR}")
 print(f"Web directory path: {WEB_DIR}")
 os.makedirs(WEB_DIR, exist_ok=True)
 
@@ -181,29 +183,46 @@ SEARCH_PAGE_HTML = """
 </html>
 """
 
-def ensure_cache_directory():
-    """Ensure that the cache directory exists."""
-    cache_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "web", "cache")
-    if not os.path.exists(cache_dir):
-        os.makedirs(cache_dir)
-    return cache_dir
-
-def generate_cache_filename(content):
-    """Generate a unique filename for the cached HTML content."""
-    timestamp = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
-    content_hash = hashlib.md5(content.encode('utf-8')).hexdigest()[:8]
-    return f"page_{timestamp}_{content_hash}.html"
-
-def save_to_cache(html_content):
-    """Save HTML content to a file in the cache directory."""
-    cache_dir = ensure_cache_directory()
-    filename = generate_cache_filename(html_content)
-    filepath = os.path.join(cache_dir, filename)
+def save_html_response(path, html_content):
+    """Save HTML content to a file in the web directory based on the path."""
+    # Remove leading slash if present
+    if path.startswith("/"):
+        path = path[1:]
     
-    with open(filepath, 'w', encoding='utf-8') as file:
-        file.write(html_content)
+    # Skip saving if this is an index request that should go to root
+    if path == "index":
+        print("Skipping saving index.html to web directory as it belongs in root")
+        generate_index_html()
+        return True
+        
+    print(f"Attempting to save file for path: {path}")
     
-    return filename
+    try:
+        # Create directory structure if needed
+        if "/" in path:
+            dir_path = os.path.join(WEB_DIR, os.path.dirname(path))
+            print(f"Creating directory: {dir_path}")
+            os.makedirs(dir_path, exist_ok=True)
+            file_path = os.path.join(WEB_DIR, path + ".html")
+        else:
+            # If it's a root level path, save directly in web directory
+            file_path = os.path.join(WEB_DIR, path + ".html")
+        
+        print(f"Saving content to file: {file_path}")
+        
+        # Save HTML content to file
+        with open(file_path, "w", encoding="utf-8") as f:
+            f.write(html_content)
+        
+        print(f"Successfully saved HTML to {file_path}")
+        
+        # Regenerate the index.html file
+        generate_index_html()
+        
+        return True
+    except Exception as e:
+        print(f"Error saving file: {str(e)}")
+        return False
 
 def generate_index_html():
     """Generate an index.html file listing all saved queries alphabetically."""
@@ -214,12 +233,12 @@ def generate_index_html():
     # Extract paths from filenames and sort them alphabetically
     paths = []
     for file_path in html_files:
-        # Skip the index.html file itself
-        if os.path.basename(file_path) == "index.html":
+        # Skip any Flask-related files and index.html in web directory
+        if "flask" in file_path.lower() or os.path.basename(file_path) == "index.html":
             continue
         
-        # Get relative path from web directory
-        rel_path = os.path.relpath(file_path, WEB_DIR)
+        # Get relative path from root directory
+        rel_path = os.path.relpath(file_path, ROOT_DIR)
         # Convert Windows backslashes to forward slashes for URLs
         rel_path = rel_path.replace("\\", "/")
         # Remove .html extension
@@ -324,47 +343,22 @@ def generate_index_html():
 </body>
 </html>"""
     
-    # Save the index.html file
-    index_path = os.path.join(WEB_DIR, "index.html")
+    # Save the index.html file to ROOT_DIR instead of WEB_DIR
+    index_path = os.path.join(ROOT_DIR, "index.html")
     print(f"Saving index.html to {index_path}")
     with open(index_path, "w", encoding="utf-8") as f:
         f.write(index_html)
-    print("Index generated successfully")
-
-def save_html_response(path, html_content):
-    """Save HTML content to a file in the web directory based on the path."""
-    # Remove leading slash if present
-    if path.startswith("/"):
-        path = path[1:]
-        
-    print(f"Attempting to save file for path: {path}")
     
-    try:
-        # Create directory structure if needed
-        if "/" in path:
-            dir_path = os.path.join(WEB_DIR, os.path.dirname(path))
-            print(f"Creating directory: {dir_path}")
-            os.makedirs(dir_path, exist_ok=True)
-            file_path = os.path.join(WEB_DIR, path + ".html")
-        else:
-            # If it's a root level path, save directly in web directory
-            file_path = os.path.join(WEB_DIR, path + ".html")
-        
-        print(f"Saving content to file: {file_path}")
-        
-        # Save HTML content to file
-        with open(file_path, "w", encoding="utf-8") as f:
-            f.write(html_content)
-        
-        print(f"Successfully saved HTML to {file_path}")
-        
-        # Regenerate the index.html file
-        generate_index_html()
-        
-        return True
-    except Exception as e:
-        print(f"Error saving file: {str(e)}")
-        return False
+    # Delete any index.html in web directory to prevent conflicts
+    web_index_path = os.path.join(WEB_DIR, "index.html")
+    if os.path.exists(web_index_path):
+        print(f"Removing duplicate index.html from web directory: {web_index_path}")
+        try:
+            os.remove(web_index_path)
+        except Exception as e:
+            print(f"Warning: Failed to remove web directory index.html: {str(e)}")
+    
+    print("Index generated successfully")
 
 @app.route("/", methods=['GET'])
 def home():
@@ -384,7 +378,7 @@ def search():
 def index():
     # Generate an up-to-date index.html and serve it
     generate_index_html()
-    with open(os.path.join(WEB_DIR, "index.html"), "r", encoding="utf-8") as f:
+    with open(os.path.join(ROOT_DIR, "index.html"), "r", encoding="utf-8") as f:
         content = f.read()
     return content, 200, {'Content-Type': 'text/html'}
 
@@ -392,11 +386,23 @@ def index():
 def catch_all(path=""):
     print(f"Handling request for path: {path}")
     
-    # Serve saved file if it exists
-    file_path = os.path.join(WEB_DIR, path + ".html")
-    if os.path.exists(file_path):
-        print(f"Serving existing file: {file_path}")
-        with open(file_path, "r", encoding="utf-8") as f:
+    # Special handling for index.html
+    if path == "index.html":
+        return redirect(url_for('index'))
+    
+    # First check if file exists in web directory
+    web_file_path = os.path.join(WEB_DIR, path + ".html")
+    if os.path.exists(web_file_path):
+        print(f"Serving existing file from web directory: {web_file_path}")
+        with open(web_file_path, "r", encoding="utf-8") as f:
+            content = f.read()
+        return content, 200, {'Content-Type': 'text/html'}
+    
+    # Then check if file exists in root directory (for backward compatibility)
+    root_file_path = os.path.join(ROOT_DIR, path + ".html")
+    if os.path.exists(root_file_path):
+        print(f"Serving existing file from root directory: {root_file_path}")
+        with open(root_file_path, "r", encoding="utf-8") as f:
             content = f.read()
         return content, 200, {'Content-Type': 'text/html'}
     
@@ -424,7 +430,7 @@ def catch_all(path=""):
         
         print(f"Content type: {content_type}")
         
-        # If the response is HTML, save it to the web folder
+        # If the response is HTML, save it to the file system
         if content_type == "text/html":
             print("Saving HTML response...")
             save_html_response(path, response_data)
@@ -436,7 +442,7 @@ def catch_all(path=""):
 
 if __name__ == '__main__':
     # Create index.html if it doesn't exist yet
-    if not os.path.exists(os.path.join(WEB_DIR, "index.html")):
+    if not os.path.exists(os.path.join(ROOT_DIR, "index.html")):
         print("Generating initial index.html...")
         generate_index_html()
     
