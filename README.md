@@ -70,6 +70,7 @@ The server will start at http://localhost:5000 by default.
 - [ ] generate links to external sources
 - [ ] generate links that go deeper into the topic
 - [ ] automate HTML dumbing to another repo with a cron job
+- [ ] make diffrent colors for links (links not generated yet vs links generated and saved vs external links)
 
 ## 🤝 Contributing
 
