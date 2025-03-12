@@ -1,6 +1,6 @@
 # INFINITE AI WEB
 
-
+![chrome_qRkv6DD4mS](https://github.com/user-attachments/assets/a1c5428c-c22d-4112-8861-b1430256876b)
 
 A dynamic web content generator that creates pages on-the-fly using AI. Simply search for any topic or navigate to any URL path, and the application will generate relevant content for that route.
 
