@@ -5,6 +5,8 @@ import json
 from dotenv import load_dotenv
 import glob
 import re
+import datetime
+import hashlib
 
 # Load environment variables from .env file
 load_dotenv()
@@ -178,6 +180,30 @@ SEARCH_PAGE_HTML = """
 </body>
 </html>
 """
+
+def ensure_cache_directory():
+    """Ensure that the cache directory exists."""
+    cache_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "web", "cache")
+    if not os.path.exists(cache_dir):
+        os.makedirs(cache_dir)
+    return cache_dir
+
+def generate_cache_filename(content):
+    """Generate a unique filename for the cached HTML content."""
+    timestamp = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
+    content_hash = hashlib.md5(content.encode('utf-8')).hexdigest()[:8]
+    return f"page_{timestamp}_{content_hash}.html"
+
+def save_to_cache(html_content):
+    """Save HTML content to a file in the cache directory."""
+    cache_dir = ensure_cache_directory()
+    filename = generate_cache_filename(html_content)
+    filepath = os.path.join(cache_dir, filename)
+    
+    with open(filepath, 'w', encoding='utf-8') as file:
+        file.write(html_content)
+    
+    return filename
 
 def generate_index_html():
     """Generate an index.html file listing all saved queries alphabetically."""
