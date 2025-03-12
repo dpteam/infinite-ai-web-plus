@@ -42,7 +42,7 @@ A dynamic web content generator that creates pages on-the-fly using AI. Simply s
 
 Run the Flask application:
 ```
-python "infint web.py"
+python infinite_web.py
 ```
 
 The server will start at http://localhost:5000 by default.
@@ -61,6 +61,15 @@ The server will start at http://localhost:5000 by default.
 3. If not found, the application generates the content using the Gemini AI model.
 4. The AI-generated content is then saved to the file system for future requests.
 5. The application maintains a proper directory structure that matches the URL path structure.
+
+## 🛣️ Roadmap
+
+- [ ] generate more complex content
+- [ ] generate images
+- [ ] toggle between different AI models
+- [ ] generate links to external sources
+- [ ] generate links that go deeper into the topic
+- [ ] automate HTML dumbing to another repo with a cron job
 
 ## 🤝 Contributing
 
