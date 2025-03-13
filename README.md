@@ -82,6 +82,15 @@ The server will start at http://localhost:5000 by default.
 - [ ] automate HTML dumbing to another repo with a cron job
 - [ ] make diffrent colors for links (links not generated yet vs links generated and saved vs external links)
 
+## 👁️ Observations : Model Comparison
+
+| Model                | Speed  | Complexity | Image Generation |
+| -------------------- | ------ | ---------- | ---------------- |
+| Gemini 2.0 Flash     | Fast   | Medium     | No               |
+| Gemini 1.5 Flash Exp | Medium | High       | Yes              |
+| Gemini 1.5 Pro       | Slow   | High       | Yes              |
+
+
 ## 🤝 Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
