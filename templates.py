@@ -1,13 +1,15 @@
+from config import APP_TITLE
+
 # HTML template for the search page
-SEARCH_PAGE_HTML = """
+SEARCH_PAGE_HTML = f"""
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>INFINITE AI WEB</title>
+    <title>{APP_TITLE}</title>
     <style>
-        body {
+        body {{
             font-family: Arial, sans-serif;
             display: flex;
             flex-direction: column;
@@ -16,19 +18,19 @@ SEARCH_PAGE_HTML = """
             height: 100vh;
             margin: 0;
             position: relative;
-        }
-        .logo {
+        }}
+        .logo {{
             font-size: 48px;
             font-weight: bold;
             margin-bottom: 30px;
             color: #4285f4;
             text-align: center;
-        }
-        .search-container {
+        }}
+        .search-container {{
             width: 100%;
             max-width: 584px;
-        }
-        .search-bar {
+        }}
+        .search-bar {{
             width: 100%;
             padding: 12px 20px;
             margin: 8px 0;
@@ -37,12 +39,12 @@ SEARCH_PAGE_HTML = """
             border-radius: 24px;
             font-size: 16px;
             outline: none;
-        }
-        .search-bar:hover, .search-bar:focus {
+        }}
+        .search-bar:hover, .search-bar:focus {{
             box-shadow: 0 1px 6px rgba(32,33,36,.28);
             border-color: rgba(223,225,229,0);
-        }
-        .search-button {
+        }}
+        .search-button {{
             background-color: #f8f9fa;
             border: 1px solid #f8f9fa;
             border-radius: 4px;
@@ -57,69 +59,69 @@ SEARCH_PAGE_HTML = """
             text-align: center;
             cursor: pointer;
             user-select: none;
-        }
-        .search-button:hover {
+        }}
+        .search-button:hover {{
             box-shadow: 0 1px 1px rgba(0,0,0,.1);
             background-color: #f8f9fa;
             border: 1px solid #dadce0;
             color: #202124;
-        }
-        .buttons {
+        }}
+        .buttons {{
             display: flex;
             justify-content: center;
             align-items: center;
             margin-top: 10px;
-        }
-        .infinite {
+        }}
+        .infinite {{
             background: linear-gradient(to right, #4285f4, #ea4335, #fbbc05, #34a853, #4285f4);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-size: 800% 100%;
             animation: gradient 10s linear infinite;
-        }
-        @keyframes gradient {
-            0% {
+        }}
+        @keyframes gradient {{
+            0% {{
                 background-position: 0% 0%;
-            }
-            100% {
+            }}
+            100% {{
                 background-position: 800% 0%;
-            }
-        }
-        .footer {
+            }}
+        }}
+        .footer {{
             position: fixed;
             bottom: 20px;
             text-align: center;
             width: 100%;
             font-size: 14px;
             color: #70757a;
-        }
-        .footer a {
+        }}
+        .footer a {{
             color: #70757a;
             text-decoration: none;
-        }
-        .footer a:hover {
+        }}
+        .footer a:hover {{
             text-decoration: underline;
-        }
-        .links-container {
+        }}
+        .links-container {{
             position: absolute;
             top: 20px;
             right: 20px;
-        }
-        .links-container a {
+        }}
+        .links-container a {{
             color: #70757a;
             text-decoration: none;
             font-size: 14px;
-        }
-        .links-container a:hover {
+        }}
+        .links-container a:hover {{
             text-decoration: underline;
-        }
+        }}
     </style>
 </head>
 <body>
     <div class="links-container">
         <a href="index">Saved Searches</a>
     </div>
-    <div class="logo"><span class="infinite">INFINITE AI WEB</span></div>
+    <div class="logo"><span class="infinite">{APP_TITLE}</span></div>
     <div class="search-container">
         <form action="search" method="GET">
             <input type="text" class="search-bar" name="query" placeholder="Search the web..." autofocus>

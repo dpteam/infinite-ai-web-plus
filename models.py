@@ -9,7 +9,7 @@ genai.configure(api_key=API_KEY)
 
 # Initialize the model with better parameters
 model = genai.GenerativeModel(
-    'models/gemini-2.0-flash',
+    'models/gemini-2.0-flash-exp',
     generation_config={
         "temperature": 0.7,
         "top_p": 0.95,

@@ -14,6 +14,9 @@ WEB_DIR = os.path.join(ROOT_DIR, "web")
 # Create web directory if it doesn't exist
 os.makedirs(WEB_DIR, exist_ok=True)
 
+# Application title
+APP_TITLE = "INFINITE AI WEB v1"
+
 # Enhanced base prompt for richer content generation
 BASE_PROMPT = """Generate a comprehensive and detailed response for the URL path: `{{URL_PATH}}`
 
