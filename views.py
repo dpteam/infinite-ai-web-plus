@@ -62,12 +62,12 @@ def setup_routes(app):
             return content, 200, {'Content-Type': 'text/html'}
         
         # Generate content for any path that hasn't been found
-        print(f"No existing file found for {path}, generating content...")
+        print(f"No existing file found for {path}, generating rich content...")
         
         # Get form data if available
         form_data = request.form if request.form else None
         
-        # Generate content
+        # Generate content with enhanced settings
         try:
             content_type, response_data = generate_content(path, form_data)
             

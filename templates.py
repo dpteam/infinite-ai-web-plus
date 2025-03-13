@@ -160,3 +160,150 @@ def generate_error_page(path, error):
     </body>
     </html>
     """
+
+# Adding base CSS for generated content pages
+CONTENT_PAGE_CSS = """
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        line-height: 1.6;
+        color: #333;
+        max-width: 1000px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+    header {
+        margin-bottom: 30px;
+        border-bottom: 1px solid #eaeaea;
+        padding-bottom: 20px;
+    }
+    h1 {
+        color: #1a73e8;
+        font-size: 2.5em;
+    }
+    h2 {
+        color: #1967d2;
+        font-size: 1.8em;
+        margin-top: 40px;
+        border-bottom: 1px solid #f0f0f0;
+        padding-bottom: 10px;
+    }
+    h3 {
+        color: #174ea6;
+        font-size: 1.4em;
+        margin-top: 30px;
+    }
+    p {
+        margin: 16px 0;
+        font-size: 16px;
+    }
+    code {
+        background-color: #f5f5f5;
+        padding: 2px 6px;
+        border-radius: 4px;
+        font-family: 'Courier New', monospace;
+        font-size: 0.9em;
+    }
+    pre {
+        background-color: #f5f5f5;
+        padding: 15px;
+        border-radius: 6px;
+        overflow-x: auto;
+        font-family: 'Courier New', monospace;
+        margin: 20px 0;
+    }
+    table {
+        border-collapse: collapse;
+        width: 100%;
+        margin: 25px 0;
+    }
+    th, td {
+        border: 1px solid #ddd;
+        padding: 12px;
+        text-align: left;
+    }
+    th {
+        background-color: #f2f2f2;
+        font-weight: bold;
+    }
+    tr:nth-child(even) {
+        background-color: #f9f9f9;
+    }
+    ul, ol {
+        margin: 20px 0 20px 20px;
+    }
+    li {
+        margin: 8px 0;
+    }
+    blockquote {
+        border-left: 5px solid #e0e0e0;
+        padding-left: 20px;
+        margin: 20px 0;
+        color: #666;
+        font-style: italic;
+    }
+    .note {
+        background-color: #e7f3fe;
+        border-left: 6px solid #2196F3;
+        padding: 10px;
+        margin: 20px 0;
+    }
+    .warning {
+        background-color: #fff3cd;
+        border-left: 6px solid #ffc107;
+        padding: 10px;
+        margin: 20px 0;
+    }
+    .related-topics {
+        margin-top: 50px;
+        padding-top: 20px;
+        border-top: 1px solid #eaeaea;
+    }
+    .related-topics h2 {
+        color: #5f6368;
+        font-size: 1.5em;
+        margin-bottom: 20px;
+    }
+    .related-topics ul {
+        margin-left: 0;
+        padding-left: 0;
+        list-style-type: none;
+    }
+    .related-topics li {
+        margin: 10px 0;
+    }
+    .related-topics a {
+        text-decoration: none;
+        color: #1a73e8;
+        padding: 8px 16px;
+        border-radius: 4px;
+        display: inline-block;
+        transition: background-color 0.2s;
+    }
+    .related-topics a:hover {
+        background-color: #f1f3f4;
+        text-decoration: underline;
+    }
+    .back-to-search {
+        display: block;
+        margin-top: 40px;
+        text-align: center;
+    }
+    .back-to-search a {
+        text-decoration: none;
+        color: #5f6368;
+        padding: 8px 16px;
+        border-radius: 4px;
+        font-size: 14px;
+        transition: background-color 0.2s;
+    }
+    .back-to-search a:hover {
+        background-color: #f1f3f4;
+        text-decoration: underline;
+    }
+</style>
+"""
+
+def get_content_template():
+    """Returns the base template with CSS for content pages"""
+    return CONTENT_PAGE_CSS
