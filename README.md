@@ -4,6 +4,16 @@
 
 A dynamic web content generator that creates pages on-the-fly using AI. Simply search for any topic or navigate to any URL path, and the application will generate relevant content for that route.
 
+## 📈 Development
+
+### v0.1
+
+![screenshot_fbi_memo_v01](screenshots/fbi_memo_v01.png)
+
+### v1
+
+![screenshot_fbi_memo_v1](screenshots/fbi_memo_v1.png)
+
 ## 🌟 Features
 
 - **AI-Generated Content**: Uses Google's Gemini 2.0 Flash model to generate HTML content for any URL path.
