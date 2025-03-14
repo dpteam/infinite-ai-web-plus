@@ -88,7 +88,7 @@ The server will start at http://localhost:5000 by default.
 | -------------------- | ------ | ---------- | ---------------- |
 | Gemini 2.0 Flash     | Fast   | Medium     | No               |
 | Gemini 1.5 Flash Exp | Medium | High       | Yes              |
-| Gemini 1.5 Pro       | Slow   | High       | Yes              |
+| Gemini 1.5 Pro       | Slow   | High       | didnt test yet   |
 
 
 ## 🤝 Contributing
