@@ -43,6 +43,39 @@ def save_html_response(path, html_content):
         print(f"Error saving file: {str(e)}")
         return False
 
+def save_image_response(path, image_data, content_type):
+    """Save binary image data to a file in the web directory."""
+    # Remove leading slash if present
+    if path.startswith("/"):
+        path = path[1:]
+    
+    print(f"Attempting to save image for path: {path}")
+    
+    try:
+        # Create directory structure if needed
+        if "/" in path:
+            dir_path = os.path.join(WEB_DIR, os.path.dirname(path))
+            print(f"Creating directory: {dir_path}")
+            os.makedirs(dir_path, exist_ok=True)
+        
+        # Save directly with the original path (including extension)
+        file_path = os.path.join(WEB_DIR, path)
+        
+        print(f"Saving image to file: {file_path}")
+        
+        # Save binary image data to file
+        with open(file_path, "wb") as f:
+            f.write(image_data)
+        
+        print(f"Successfully saved image to {file_path}")
+        
+        # We don't regenerate index.html for images as they should not appear in the index
+        
+        return True
+    except Exception as e:
+        print(f"Error saving image file: {str(e)}")
+        return False
+
 def generate_index_html():
     """Generate an index.html file listing all saved queries alphabetically."""
     # Get all HTML files in web directory

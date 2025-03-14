@@ -42,3 +42,14 @@ For HTML responses:
 {{OPTIONAL_DATA}}
 Content-Type:
 """
+
+# Prompt specifically for image generation
+IMAGE_PROMPT = """Create a visually clear and simple image that represents: {{IMAGE_TOPIC}}
+
+The image should be:
+- Easy to understand at a glance
+- Focused on the main subject
+- Clean, with minimal background distraction
+- Appropriate for educational content
+- Suitable for all audiences
+"""

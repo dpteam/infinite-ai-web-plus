@@ -1,8 +1,8 @@
-from flask import request, redirect, url_for
+from flask import request, redirect, url_for, Response
 import os
 from config import ROOT_DIR
-from models import generate_content
-from utils import save_html_response, generate_index_html
+from models import generate_content, is_image_path, get_image_type_from_path
+from utils import save_html_response, generate_index_html, save_image_response
 from templates import SEARCH_PAGE_HTML, generate_error_page
 
 def setup_routes(app):
@@ -44,7 +44,44 @@ def setup_routes(app):
         if path == "index.html":
             return redirect(url_for('index'))
         
-        # First check if file exists in web directory
+        # Check if this is a request for an image file
+        if is_image_path(path):
+            print(f"Image path detected: {path}")
+            
+            # First check if the image already exists
+            from config import WEB_DIR
+            image_file_path = os.path.join(WEB_DIR, path)
+            if os.path.exists(image_file_path):
+                print(f"Serving existing image file: {image_file_path}")
+                # Read the binary image data
+                with open(image_file_path, "rb") as f:
+                    image_data = f.read()
+                # Get the appropriate MIME type
+                mime_type = get_image_type_from_path(path)
+                # Return the binary data with the correct Content-Type
+                return Response(image_data, mimetype=mime_type)
+            
+            # No existing image, so we need to generate one
+            try:
+                content_type, response_data = generate_content(path, None)
+                
+                # If we got an image back
+                if content_type.startswith('image/'):
+                    # Save the image for future requests
+                    save_image_response(path, response_data, content_type)
+                    # Return the binary data with the correct Content-Type
+                    return Response(response_data, mimetype=content_type)
+                else:
+                    # Something went wrong - we got HTML instead of an image
+                    # (this will be error HTML from the generate_content function)
+                    return response_data, 200, {'Content-Type': content_type}
+                    
+            except Exception as e:
+                print(f"Error generating image: {str(e)}")
+                error_page = generate_error_page(path, e)
+                return error_page, 500, {'Content-Type': 'text/html'}
+        
+        # For non-image paths, check if HTML file already exists in web directory
         from config import WEB_DIR
         web_file_path = os.path.join(WEB_DIR, path + ".html")
         if os.path.exists(web_file_path):
@@ -62,7 +99,7 @@ def setup_routes(app):
             return content, 200, {'Content-Type': 'text/html'}
         
         # Generate content for any path that hasn't been found
-        print(f"No existing file found for {path}, generating rich content...")
+        print(f"No existing file found for {path}, generating content...")
         
         # Get form data if available
         form_data = request.form if request.form else None
@@ -71,11 +108,20 @@ def setup_routes(app):
         try:
             content_type, response_data = generate_content(path, form_data)
             
-            # Save HTML responses
-            if content_type == "text/html":
+            # Handle different content types
+            if content_type.startswith('image/'):
+                # For image responses, save the binary image data
+                save_image_response(path, response_data, content_type)
+                # Return the binary data with the correct Content-Type
+                return Response(response_data, mimetype=content_type)
+            elif content_type == "text/html":
+                # For HTML responses, save the HTML content
                 save_html_response(path, response_data)
-            
-            return response_data, 200, {'Content-Type': content_type}
+                return response_data, 200, {'Content-Type': content_type}
+            else:
+                # For any other content types
+                return response_data, 200, {'Content-Type': content_type}
+                
         except Exception as e:
             print(f"Error generating content: {str(e)}")
             error_page = generate_error_page(path, e)

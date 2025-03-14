@@ -74,13 +74,14 @@ The server will start at http://localhost:5000 by default.
 
 ## 🛣️ Roadmap
 
-- [ ] generate more complex content
+- [x] generate more complex content
 - [ ] generate images
 - [ ] toggle between different AI models
 - [ ] generate links to external sources
 - [ ] generate links that go deeper into the topic
 - [ ] automate HTML dumbing to another repo with a cron job
 - [ ] make diffrent colors for links (links not generated yet vs links generated and saved vs external links)
+- [ ] make saved search pages links easier to navigate
 
 ## 👁️ Observations : Model Comparison
 
