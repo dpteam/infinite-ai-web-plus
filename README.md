@@ -4,6 +4,16 @@
 
 A dynamic web content generator that creates pages on-the-fly using AI. Simply search for any topic or navigate to any URL path, and the application will generate relevant content for that route.
 
+## 📈 Development
+
+### v0.1
+
+![screenshot_fbi_memo_v01](screenshots/fbi_memo_v01.png)
+
+### v1
+
+![screenshot_fbi_memo_v1](screenshots/fbi_memo_v1.png)
+
 ## 🌟 Features
 
 - **AI-Generated Content**: Uses Google's Gemini 2.0 Flash model to generate HTML content for any URL path.
@@ -71,6 +81,15 @@ The server will start at http://localhost:5000 by default.
 - [ ] generate links that go deeper into the topic
 - [ ] automate HTML dumbing to another repo with a cron job
 - [ ] make diffrent colors for links (links not generated yet vs links generated and saved vs external links)
+
+## 👁️ Observations : Model Comparison
+
+| Model                | Speed  | Complexity | Image Generation |
+| -------------------- | ------ | ---------- | ---------------- |
+| Gemini 2.0 Flash     | Fast   | Medium     | No               |
+| Gemini 1.5 Flash Exp | Medium | High       | Yes              |
+| Gemini 1.5 Pro       | Slow   | High       | didnt test yet   |
+
 
 ## 🤝 Contributing
 
