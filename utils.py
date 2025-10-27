@@ -8,37 +8,45 @@ def save_to_cache(path, content_type, content):
         # Normalize path
         if path.startswith('/'):
             path = path[1:]
+        path = path.rstrip('/')
         if path == '':
             path = 'index'
         
-        # Determine file path based on content type and path structure
-        if '/' in path:
-            # For nested paths like "games/stronghold/units"
-            dir_path = os.path.join(WEB_DIR, os.path.dirname(path))
-            file_name = os.path.basename(path)
+        # Always use .html extension for HTML content
+        if content_type == 'text/html':
+            if '/' in path:
+                # For nested paths like "games/stronghold"
+                dir_path = os.path.join(WEB_DIR, os.path.dirname(path))
+                file_name = os.path.basename(path)
+                file_path = os.path.join(dir_path, f"{file_name}.html")
+            else:
+                # For top-level paths like "programming"
+                file_path = os.path.join(WEB_DIR, f"{path}.html")
             
             # Create directory if it doesn't exist
-            os.makedirs(dir_path, exist_ok=True)
+            os.makedirs(os.path.dirname(file_path), exist_ok=True)
             
-            # Determine file extension
-            if content_type == 'text/html':
-                file_path = os.path.join(dir_path, f"{file_name}.html")
-            elif content_type == 'application/json':
+        elif content_type == 'application/json':
+            # For JSON content
+            if '/' in path:
+                dir_path = os.path.join(WEB_DIR, os.path.dirname(path))
+                file_name = os.path.basename(path)
                 file_path = os.path.join(dir_path, f"{file_name}.json")
-            elif content_type.startswith('text/'):
-                file_path = os.path.join(dir_path, f"{file_name}.txt")
             else:
-                file_path = os.path.join(dir_path, file_name)
-        else:
-            # For top-level paths like "programming"
-            if content_type == 'text/html':
-                file_path = os.path.join(WEB_DIR, f"{path}.html")
-            elif content_type == 'application/json':
                 file_path = os.path.join(WEB_DIR, f"{path}.json")
-            elif content_type.startswith('text/'):
-                file_path = os.path.join(WEB_DIR, f"{path}.txt")
+            
+            os.makedirs(os.path.dirname(file_path), exist_ok=True)
+            
+        else:
+            # For other content types, use original logic
+            if '/' in path:
+                dir_path = os.path.join(WEB_DIR, os.path.dirname(path))
+                file_name = os.path.basename(path)
+                file_path = os.path.join(dir_path, file_name)
             else:
                 file_path = os.path.join(WEB_DIR, path)
+            
+            os.makedirs(os.path.dirname(file_path), exist_ok=True)
         
         # Save content to file
         with open(file_path, 'w', encoding='utf-8') as f:
@@ -57,31 +65,30 @@ def load_from_cache(path):
         # Normalize path
         if path.startswith('/'):
             path = path[1:]
+        path = path.rstrip('/')
         if path == '':
             path = 'index'
         
-        # Try different extensions and locations
+        # Try different extensions
         possible_paths = []
         
         if '/' in path:
-            # For nested paths
+            # For nested paths like "games/stronghold"
             dir_path = os.path.join(WEB_DIR, os.path.dirname(path))
             file_name = os.path.basename(path)
             possible_paths.extend([
-                os.path.join(dir_path, f"{file_name}.html"),
-                os.path.join(dir_path, f"{file_name}.json"),
-                os.path.join(dir_path, f"{file_name}.txt"),
-                os.path.join(dir_path, file_name),
-                os.path.join(dir_path, "index.html")  # directory index
+                os.path.join(dir_path, f"{file_name}.html"),  # .html files
+                os.path.join(dir_path, f"{file_name}.json"),  # .json files  
+                os.path.join(dir_path, f"{file_name}.txt"),   # .txt files
+                os.path.join(dir_path, file_name),            # no extension (legacy)
             ])
         else:
-            # For top-level paths
+            # For top-level paths like "programming"
             possible_paths.extend([
                 os.path.join(WEB_DIR, f"{path}.html"),
                 os.path.join(WEB_DIR, f"{path}.json"),
                 os.path.join(WEB_DIR, f"{path}.txt"),
                 os.path.join(WEB_DIR, path),
-                os.path.join(WEB_DIR, path, "index.html")  # directory index
             ])
         
         for file_path in possible_paths:
