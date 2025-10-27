@@ -12,41 +12,26 @@ def save_to_cache(path, content_type, content):
         if path == '':
             path = 'index'
         
-        # Always use .html extension for HTML content
+        # Determine file extension based on content type
         if content_type == 'text/html':
-            if '/' in path:
-                # For nested paths like "games/stronghold"
-                dir_path = os.path.join(WEB_DIR, os.path.dirname(path))
-                file_name = os.path.basename(path)
-                file_path = os.path.join(dir_path, f"{file_name}.html")
-            else:
-                # For top-level paths like "programming"
-                file_path = os.path.join(WEB_DIR, f"{path}.html")
-            
-            # Create directory if it doesn't exist
-            os.makedirs(os.path.dirname(file_path), exist_ok=True)
-            
+            extension = '.html'
         elif content_type == 'application/json':
-            # For JSON content
-            if '/' in path:
-                dir_path = os.path.join(WEB_DIR, os.path.dirname(path))
-                file_name = os.path.basename(path)
-                file_path = os.path.join(dir_path, f"{file_name}.json")
-            else:
-                file_path = os.path.join(WEB_DIR, f"{path}.json")
-            
-            os.makedirs(os.path.dirname(file_path), exist_ok=True)
-            
+            extension = '.json'
+        elif content_type.startswith('text/'):
+            extension = '.txt'
         else:
-            # For other content types, use original logic
-            if '/' in path:
-                dir_path = os.path.join(WEB_DIR, os.path.dirname(path))
-                file_name = os.path.basename(path)
-                file_path = os.path.join(dir_path, file_name)
-            else:
-                file_path = os.path.join(WEB_DIR, path)
-            
-            os.makedirs(os.path.dirname(file_path), exist_ok=True)
+            extension = '.html'  # default to HTML if unknown
+        
+        # Always add extension to the filename
+        if '/' in path:
+            dir_path = os.path.join(WEB_DIR, os.path.dirname(path))
+            file_name = os.path.basename(path)
+            file_path = os.path.join(dir_path, f"{file_name}{extension}")
+        else:
+            file_path = os.path.join(WEB_DIR, f"{path}{extension}")
+        
+        # Create directory if it doesn't exist
+        os.makedirs(os.path.dirname(file_path), exist_ok=True)
         
         # Save content to file
         with open(file_path, 'w', encoding='utf-8') as f:
