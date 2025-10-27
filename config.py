@@ -4,8 +4,27 @@ from dotenv import load_dotenv
 # Load environment variables from .env file
 load_dotenv()
 
-# Get API key from environment variable
-API_KEY = os.getenv("GEMINI_API_KEY")
+# AI Provider configuration
+AI_PROVIDER = os.getenv("AI_PROVIDER", "openrouter")  # openrouter, openai, gemini
+
+# OpenRouter configuration
+OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
+OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1"
+OPENROUTER_MODEL = os.getenv("OPENROUTER_MODEL", "meta-llama/llama-3.1-70b-instruct")
+
+# OpenAI-compatible configuration (for LM Studio, LocalAI, etc.)
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "default-key")
+OPENAI_BASE_URL = os.getenv("OPENAI_BASE_URL", "http://192.168.1.222:1234/v1")
+OPENAI_MODEL = os.getenv("OPENAI_MODEL", "local-model")
+
+# Gemini configuration
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+GEMINI_MODEL = os.getenv("GEMINI_MODEL", "models/gemini-2.0-flash-exp")
+
+# Common settings
+MAX_TOKENS = int(os.getenv("MAX_TOKENS", "8192"))
+TEMPERATURE = float(os.getenv("TEMPERATURE", "0.7"))
+TOP_P = float(os.getenv("TOP_P", "0.95"))
 
 # Define the root directory path - use absolute path to avoid issues
 ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -42,3 +61,25 @@ For HTML responses:
 {{OPTIONAL_DATA}}
 Content-Type:
 """
+
+def get_ai_config():
+    """Get configuration for the current AI provider"""
+    return {
+        "openrouter": {
+            "name": "OpenRouter",
+            "api_key": OPENROUTER_API_KEY,
+            "base_url": OPENROUTER_BASE_URL,
+            "model": OPENROUTER_MODEL
+        },
+        "openai": {
+            "name": "OpenAI-compatible",
+            "api_key": OPENAI_API_KEY,
+            "base_url": OPENAI_BASE_URL,
+            "model": OPENAI_MODEL
+        },
+        "gemini": {
+            "name": "Google Gemini",
+            "api_key": GEMINI_API_KEY,
+            "model": GEMINI_MODEL
+        }
+    }[AI_PROVIDER]

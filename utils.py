@@ -1,181 +1,223 @@
 import os
-import glob
-from config import ROOT_DIR, WEB_DIR
+import json
+from config import WEB_DIR
 
-def save_html_response(path, html_content):
-    """Save HTML content to a file in the web directory based on the path."""
-    # Remove leading slash if present
-    if path.startswith("/"):
-        path = path[1:]
-    
-    # Skip saving if this is an index request that should go to root
-    if path == "index":
-        print("Skipping saving index.html to web directory as it belongs in root")
-        generate_index_html()
-        return True
-        
-    print(f"Attempting to save file for path: {path}")
-    
+def save_to_cache(path, content_type, content):
+    """Save generated content to cache in web directory"""
     try:
-        # Create directory structure if needed
-        if "/" in path:
+        # Normalize path
+        if path.startswith('/'):
+            path = path[1:]
+        if path == '':
+            path = 'index'
+        
+        # Determine file path based on content type and path structure
+        if '/' in path:
+            # For nested paths like "games/stronghold/units"
             dir_path = os.path.join(WEB_DIR, os.path.dirname(path))
-            print(f"Creating directory: {dir_path}")
+            file_name = os.path.basename(path)
+            
+            # Create directory if it doesn't exist
             os.makedirs(dir_path, exist_ok=True)
-            file_path = os.path.join(WEB_DIR, path + ".html")
+            
+            # Determine file extension
+            if content_type == 'text/html':
+                file_path = os.path.join(dir_path, f"{file_name}.html")
+            elif content_type == 'application/json':
+                file_path = os.path.join(dir_path, f"{file_name}.json")
+            elif content_type.startswith('text/'):
+                file_path = os.path.join(dir_path, f"{file_name}.txt")
+            else:
+                file_path = os.path.join(dir_path, file_name)
         else:
-            # If it's a root level path, save directly in web directory
-            file_path = os.path.join(WEB_DIR, path + ".html")
+            # For top-level paths like "programming"
+            if content_type == 'text/html':
+                file_path = os.path.join(WEB_DIR, f"{path}.html")
+            elif content_type == 'application/json':
+                file_path = os.path.join(WEB_DIR, f"{path}.json")
+            elif content_type.startswith('text/'):
+                file_path = os.path.join(WEB_DIR, f"{path}.txt")
+            else:
+                file_path = os.path.join(WEB_DIR, path)
         
-        print(f"Saving content to file: {file_path}")
+        # Save content to file
+        with open(file_path, 'w', encoding='utf-8') as f:
+            f.write(content)
         
-        # Save HTML content to file
-        with open(file_path, "w", encoding="utf-8") as f:
-            f.write(html_content)
-        
-        print(f"Successfully saved HTML to {file_path}")
-        
-        # Regenerate the index.html file
-        generate_index_html()
-        
+        print(f"Content cached to: {file_path}")
         return True
+        
     except Exception as e:
-        print(f"Error saving file: {str(e)}")
+        print(f"Error caching content: {e}")
         return False
 
+def load_from_cache(path):
+    """Load content from cache if exists"""
+    try:
+        # Normalize path
+        if path.startswith('/'):
+            path = path[1:]
+        if path == '':
+            path = 'index'
+        
+        # Try different extensions and locations
+        possible_paths = []
+        
+        if '/' in path:
+            # For nested paths
+            dir_path = os.path.join(WEB_DIR, os.path.dirname(path))
+            file_name = os.path.basename(path)
+            possible_paths.extend([
+                os.path.join(dir_path, f"{file_name}.html"),
+                os.path.join(dir_path, f"{file_name}.json"),
+                os.path.join(dir_path, f"{file_name}.txt"),
+                os.path.join(dir_path, file_name),
+                os.path.join(dir_path, "index.html")  # directory index
+            ])
+        else:
+            # For top-level paths
+            possible_paths.extend([
+                os.path.join(WEB_DIR, f"{path}.html"),
+                os.path.join(WEB_DIR, f"{path}.json"),
+                os.path.join(WEB_DIR, f"{path}.txt"),
+                os.path.join(WEB_DIR, path),
+                os.path.join(WEB_DIR, path, "index.html")  # directory index
+            ])
+        
+        for file_path in possible_paths:
+            if os.path.exists(file_path):
+                with open(file_path, 'r', encoding='utf-8') as f:
+                    content = f.read()
+                
+                # Determine content type from extension
+                if file_path.endswith('.html'):
+                    content_type = 'text/html'
+                elif file_path.endswith('.json'):
+                    content_type = 'application/json'
+                elif file_path.endswith('.txt'):
+                    content_type = 'text/plain'
+                else:
+                    content_type = 'text/html'  # default
+                
+                print(f"Content loaded from cache: {file_path}")
+                return content_type, content
+        
+        return None, None
+        
+    except Exception as e:
+        print(f"Error loading from cache: {e}")
+        return None, None
+
+def is_cached(path):
+    """Check if content is cached"""
+    content_type, content = load_from_cache(path)
+    return content is not None
+
+def clear_cache_for_path(path):
+    """Clear cache for specific path"""
+    try:
+        # Normalize path
+        if path.startswith('/'):
+            path = path[1:]
+        if path == '':
+            path = 'index'
+        
+        # Possible cache file paths
+        possible_paths = []
+        
+        if '/' in path:
+            # For nested paths
+            dir_path = os.path.join(WEB_DIR, os.path.dirname(path))
+            file_name = os.path.basename(path)
+            possible_paths.extend([
+                os.path.join(dir_path, f"{file_name}.html"),
+                os.path.join(dir_path, f"{file_name}.json"),
+                os.path.join(dir_path, f"{file_name}.txt"),
+                os.path.join(dir_path, file_name),
+            ])
+        else:
+            # For top-level paths
+            possible_paths.extend([
+                os.path.join(WEB_DIR, f"{path}.html"),
+                os.path.join(WEB_DIR, f"{path}.json"),
+                os.path.join(WEB_DIR, f"{path}.txt"),
+                os.path.join(WEB_DIR, path),
+            ])
+        
+        # Also add directory index paths
+        possible_paths.append(os.path.join(WEB_DIR, path, "index.html"))
+        
+        removed_count = 0
+        for file_path in possible_paths:
+            if os.path.exists(file_path):
+                os.remove(file_path)
+                print(f"Removed cache: {file_path}")
+                removed_count += 1
+        
+        # Also remove directory if empty
+        dir_path = os.path.join(WEB_DIR, path)
+        if os.path.exists(dir_path) and os.path.isdir(dir_path):
+            try:
+                os.rmdir(dir_path)
+                print(f"Removed empty directory: {dir_path}")
+            except OSError:
+                pass  # Directory not empty
+        
+        return removed_count > 0
+        
+    except Exception as e:
+        print(f"Error clearing cache for path: {e}")
+        return False
+
+def get_cache_stats():
+    """Get cache statistics"""
+    total_files = 0
+    total_size = 0
+    
+    for root, dirs, files in os.walk(WEB_DIR):
+        for file in files:
+            file_path = os.path.join(root, file)
+            total_files += 1
+            total_size += os.path.getsize(file_path)
+    
+    return {
+        'total_files': total_files,
+        'total_size_bytes': total_size,
+        'total_size_mb': round(total_size / (1024 * 1024), 2),
+        'cache_location': WEB_DIR
+    }
+
+def save_html_response(path, content):
+    """Legacy function - now uses save_to_cache"""
+    return save_to_cache(path, 'text/html', content)
+
 def generate_index_html():
-    """Generate an index.html file listing all saved queries alphabetically."""
-    # Get all HTML files in web directory
-    html_files = glob.glob(os.path.join(WEB_DIR, "**", "*.html"), recursive=True)
-    print(f"Found {len(html_files)} HTML files in web directory")
-    
-    # Extract paths from filenames and sort them alphabetically
-    paths = []
-    for file_path in html_files:
-        # Skip any Flask-related files and index.html in web directory
-        if "flask" in file_path.lower() or os.path.basename(file_path) == "index.html":
-            continue
-        
-        # Get relative path from root directory
-        rel_path = os.path.relpath(file_path, ROOT_DIR)
-        # Convert Windows backslashes to forward slashes for URLs
-        rel_path = rel_path.replace("\\", "/")
-        # Remove .html extension
-        if rel_path.endswith(".html"):
-            rel_path = rel_path[:-5]
-        # If the file is named index.html in a subdirectory, get the directory name
-        if rel_path.endswith("/index"):
-            rel_path = rel_path[:-6]
-        
-        print(f"Adding path: {rel_path}")
-        paths.append(rel_path)
-    
-    # Sort paths alphabetically
-    paths.sort()
-    
-    # Generate HTML list of links
-    links_html = ""
-    for path in paths:
-        # Format path for display (replace hyphens with spaces, capitalize words)
-        display_path = path.replace("-", " ").replace("/", " › ")
-        display_path = " ".join([word.capitalize() for word in display_path.split()])
-        # Remove the leading slash from links to make them relative
-        links_html += f'    <li><a href="{path}">{display_path}</a></li>\n'
-    
-    # If no links, add a message
-    if not links_html:
-        links_html = '    <li>No searches saved yet. Try searching for something!</li>\n'
-    
-    # Generate complete HTML
-    index_html = f"""<!DOCTYPE html>
-<html lang="en">
+    """Generate the index.html file in root directory (legacy)"""
+    index_content = """<!DOCTYPE html>
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>INFINITE AI WEB - Saved Searches</title>
+    <title>AI Generated Content Index</title>
     <style>
-        body {{
-            font-family: Arial, sans-serif;
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
-            line-height: 1.6;
-        }}
-        h1 {{
-            color: #4285f4;
-            text-align: center;
-            margin-bottom: 30px;
-        }}
-        ul {{
-            list-style-type: none;
-            padding: 0;
-        }}
-        li {{
-            padding: 10px 0;
-            border-bottom: 1px solid #f0f0f0;
-        }}
-        a {{
-            color: #1a73e8;
-            text-decoration: none;
-        }}
-        a:hover {{
-            text-decoration: underline;
-        }}
-        .home-link {{
-            display: block;
-            margin-top: 30px;
-            text-align: center;
-        }}
-        .infinite {{
-            background: linear-gradient(to right, #4285f4, #ea4335, #fbbc05, #34a853, #4285f4);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-size: 800% 100%;
-            animation: gradient 10s linear infinite;
-            font-weight: bold;
-        }}
-        @keyframes gradient {{
-            0% {{
-                background-position: 0% 0%;
-            }}
-            100% {{
-                background-position: 800% 0%;
-            }}
-        }}
-        .footer {{
-            margin-top: 50px;
-            text-align: center;
-            color: #70757a;
-            font-size: 14px;
-        }}
+        body { font-family: Arial, sans-serif; margin: 40px; }
+        h1 { color: #333; }
+        ul { list-style-type: none; padding: 0; }
+        li { margin: 10px 0; }
+        a { text-decoration: none; color: #0066cc; }
+        a:hover { text-decoration: underline; }
     </style>
 </head>
 <body>
-    <h1><span class="infinite">INFINITE AI WEB</span></h1>
-    <h2>Saved Searches</h2>
+    <h1>AI Generated Content Index</h1>
+    <p>This is an auto-generated index of all created pages.</p>
     <ul>
-{links_html}
+        <li><a href="/">Home</a></li>
+        <li><a href="/search">Search</a></li>
     </ul>
-    <a href="." class="home-link">Back to Search</a>
-    <div class="footer">
-        made with 🍋 by Lime1
-    </div>
+    <p>Use the search functionality to generate new content.</p>
 </body>
 </html>"""
     
-    # Save the index.html file to ROOT_DIR instead of WEB_DIR
-    index_path = os.path.join(ROOT_DIR, "index.html")
-    print(f"Saving index.html to {index_path}")
+    index_path = os.path.join(os.path.dirname(WEB_DIR), "index.html")
     with open(index_path, "w", encoding="utf-8") as f:
-        f.write(index_html)
-    
-    # Delete any index.html in web directory to prevent conflicts
-    web_index_path = os.path.join(WEB_DIR, "index.html")
-    if os.path.exists(web_index_path):
-        print(f"Removing duplicate index.html from web directory: {web_index_path}")
-        try:
-            os.remove(web_index_path)
-        except Exception as e:
-            print(f"Warning: Failed to remove web directory index.html: {str(e)}")
-    
-    print("Index generated successfully")
+        f.write(index_content)
+    print("Generated index.html")

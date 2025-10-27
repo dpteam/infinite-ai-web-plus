@@ -1,26 +1,23 @@
-import google.generativeai as genai
+import requests
 import json
 import re
-from config import API_KEY, BASE_PROMPT
-from templates import get_content_template
-
-# Configure the generative AI with API key
-genai.configure(api_key=API_KEY)
-
-# Initialize the model with better parameters
-model = genai.GenerativeModel(
-    'models/gemini-2.0-flash-exp',
-    generation_config={
-        "temperature": 0.7,
-        "top_p": 0.95,
-        "top_k": 40,
-        "max_output_tokens": 8192,
-    }
+from config import (
+    AI_PROVIDER, BASE_PROMPT, MAX_TOKENS, TEMPERATURE, TOP_P,
+    get_ai_config
 )
+from templates import get_content_template
+from utils import save_to_cache
 
-def generate_content(path, form_data=None):
-    """Generate content using the LLM."""
-    print(f"Generating content for path: {path}")
+# Try to import Gemini, but make it optional
+try:
+    import google.generativeai as genai
+    GEMINI_AVAILABLE = True
+except ImportError:
+    GEMINI_AVAILABLE = False
+
+def generate_content(path, form_data=None, use_cache=True):
+    """Generate content using the configured AI provider."""
+    print(f"Using AI provider: {AI_PROVIDER}")
     
     # Prepare the prompt
     if form_data:
@@ -30,12 +27,105 @@ def generate_content(path, form_data=None):
     
     prompt_content = prompt_content.replace("{{URL_PATH}}", path)
     
-    # Generate content
-    print("Sending request to Gemini...")
-    response = model.generate_content(prompt_content)
-    ai_data = response.text
+    # Route to the appropriate provider
+    if AI_PROVIDER == "openrouter":
+        content_type, response_data = generate_openrouter(prompt_content)
+    elif AI_PROVIDER == "openai":
+        content_type, response_data = generate_openai(prompt_content)
+    elif AI_PROVIDER == "gemini":
+        content_type, response_data = generate_gemini(prompt_content)
+    else:
+        raise ValueError(f"Unsupported AI provider: {AI_PROVIDER}")
     
-    # Extract content type and response data
+    # For HTML responses, ensure we have rich CSS styling
+    if content_type == "text/html":
+        response_data = process_html_response(response_data, path)
+    
+    # Save to cache if caching is enabled
+    if use_cache:
+        save_to_cache(path, content_type, response_data)
+        
+    return content_type, response_data
+
+def generate_openrouter(prompt):
+    """Generate content using OpenRouter API."""
+    config = get_ai_config()
+    
+    headers = {
+        "Content-Type": "application/json",
+        "Authorization": f"Bearer {config['api_key']}",
+        "HTTP-Referer": "https://your-site.com",
+        "X-Title": "Infinite AI Web"
+    }
+    
+    data = {
+        "model": config["model"],
+        "messages": [{"role": "user", "content": prompt}],
+        "temperature": TEMPERATURE,
+        "max_tokens": MAX_TOKENS,
+        "top_p": TOP_P
+    }
+    
+    print(f"Sending request to OpenRouter API for model: {config['model']}")
+    response = requests.post(f"{config['base_url']}/chat/completions", 
+                           headers=headers, json=data, timeout=120)
+    response.raise_for_status()
+    response_data = response.json()
+    
+    ai_data = response_data["choices"][0]["message"]["content"]
+    return extract_content_type_and_data(ai_data)
+
+def generate_openai(prompt):
+    """Generate content using OpenAI-compatible API."""
+    config = get_ai_config()
+    
+    headers = {
+        "Content-Type": "application/json",
+        "Authorization": f"Bearer {config['api_key']}"
+    }
+    
+    data = {
+        "model": config["model"],
+        "messages": [{"role": "user", "content": prompt}],
+        "temperature": TEMPERATURE,
+        "max_tokens": MAX_TOKENS,
+        "top_p": TOP_P
+    }
+    
+    print(f"Sending request to OpenAI-compatible API at {config['base_url']}")
+    response = requests.post(f"{config['base_url']}/chat/completions", 
+                           headers=headers, json=data, timeout=120)
+    response.raise_for_status()
+    response_data = response.json()
+    
+    ai_data = response_data["choices"][0]["message"]["content"]
+    return extract_content_type_and_data(ai_data)
+
+def generate_gemini(prompt):
+    """Generate content using Google Gemini API."""
+    if not GEMINI_AVAILABLE:
+        raise ImportError("Google Generative AI package not installed. Run: pip install google-generativeai")
+    
+    config = get_ai_config()
+    
+    # Configure Gemini
+    genai.configure(api_key=config['api_key'])
+    model = genai.GenerativeModel(config['model'])
+    
+    print(f"Sending request to Gemini API for model: {config['model']}")
+    response = model.generate_content(
+        prompt,
+        generation_config={
+            "temperature": TEMPERATURE,
+            "top_p": TOP_P,
+            "max_output_tokens": MAX_TOKENS,
+        }
+    )
+    
+    return extract_content_type_and_data(response.text)
+
+def extract_content_type_and_data(ai_data):
+    """Extract content type and data from AI response."""
     lines = ai_data.splitlines()
     if not lines:
         raise ValueError("Empty response from model")
@@ -43,11 +133,6 @@ def generate_content(path, form_data=None):
     content_type = lines[0].strip()
     response_data = "\n".join(lines[1:])
     
-    # For HTML responses, ensure we have rich CSS styling
-    if content_type == "text/html":
-        # Process HTML to enhance it with our standard CSS
-        response_data = process_html_response(response_data, path)
-        
     return content_type, response_data
 
 def process_html_response(html_content, path):
@@ -83,14 +168,10 @@ def process_html_response(html_content, path):
 
 def format_title(path):
     """Format a URL path into a readable page title."""
-    # Remove any initial 'web/' part
     if path.startswith("web/"):
         path = path[4:]
     
-    # Replace dashes and slashes with spaces
     title = path.replace("-", " ").replace("/", " - ")
-    
-    # Capitalize words
     title = " ".join(word.capitalize() for word in title.split())
     
     return title
